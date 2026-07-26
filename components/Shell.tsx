@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardTab } from "./dashboard/DashboardTab";
 import { TransactionsTab } from "./transactions/TransactionsTab";
 import { AdminTab } from "./admin/AdminTab";
 import { DocsTab } from "./docs/DocsTab";
 import { TabErrorBoundary } from "@/components/ui/TabErrorBoundary";
-import { AMBER, BG1, BORDER, DIM } from "@/lib/constants";
-import { STATUS_META } from "@/lib/constants";
+import { AMBER, BG1, BORDER, DIM, STATUS_META } from "@/lib/constants";
+import { useSorobanStatus } from "@/lib/soroban/useSorobanStatus";
 
 type Tab = "dashboard" | "transactions" | "admin" | "docs";
 const TABS: Tab[] = ["dashboard", "transactions", "admin", "docs"];
@@ -14,6 +14,7 @@ const TABS: Tab[] = ["dashboard", "transactions", "admin", "docs"];
 export function Shell() {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [connected, setConnected] = useState(false);
+  const { status: rpcStatus, lastEventAge, health: rpcHealth } = useSorobanStatus();
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -153,10 +154,26 @@ export function Shell() {
         }}
       >
         <span style={{ fontSize: 9, color: DIM, letterSpacing: "0.1em" }}>
-          SYNAPSE CORE · v0.1.0 · TESTNET · MOCK DATA
+          SYNAPSE CORE · v0.1.0 · TESTNET
         </span>
-        <span style={{ fontSize: 9, color: DIM, letterSpacing: "0.1em" }}>
-          ⬡ SOROBAN RPC: not connected
+        <span
+          style={{
+            fontSize: 9,
+            letterSpacing: "0.1em",
+            color:
+              rpcStatus === "connected"
+                ? STATUS_META.COMPLETED.color
+                : rpcStatus === "error"
+                  ? STATUS_META.FAILED.color
+                  : DIM,
+          }}
+        >
+          ⬡ SOROBAN RPC:{" "}
+          {rpcStatus === "connected"
+            ? `connected${lastEventAge ? ` · last event ${lastEventAge}` : ""}`
+            : rpcStatus === "error"
+              ? `error${rpcHealth.error ? `: ${rpcHealth.error}` : ""}`
+              : "connecting"}
         </span>
       </footer>
     </div>
