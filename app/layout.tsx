@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { AMBER, BG0 } from "@/lib/constants";
 import { ToastProvider } from "@/components/ui/Toast";
+import { SorobanProvider } from "@/lib/soroban/SorobanProvider";
 import "./globals.css";
 
 const siteUrl =
@@ -54,7 +55,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="scanline-overlay">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <SorobanProvider rpcUrl={process.env.NEXT_PUBLIC_SOROBAN_RPC_URL} contractId={process.env.NEXT_PUBLIC_CONTRACT_ID}>
+            {children}
+          </SorobanProvider>
+        </ToastProvider>
       </body>
     </html>
   );
