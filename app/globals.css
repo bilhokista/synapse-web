@@ -176,18 +176,13 @@ body {
 
 .stat-cards-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /*
+   * Five cards do not divide evenly into any fixed column count, so a hard
+   * `repeat(5, 1fr)` would strand an orphan on its own row at most widths.
+   * Packing to the available width keeps the row full and makes the two
+   * breakpoints below unnecessary — the 130px floor matches the minWidth the
+   * cards already set.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 8px;
-}
-
-@media (max-width: 768px) {
-  .stat-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .stat-cards-grid {
-    grid-template-columns: 1fr;
-  }
 }
