@@ -6,10 +6,15 @@ import { Badge } from "@/components/ui/Badge";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { AMBER, BG3, BORDER, DIM } from "@/lib/constants";
 import { shortId, elapsed, formatAmount } from "@/lib/utils";
-import type { Transaction } from "@/lib/types";
+import { TableStateRow } from "@/components/ui/TableStateRow";
+import type { TableStatus, Transaction } from "@/lib/types";
 
 interface RecentTxTableProps {
   txs: Transaction[];
+  /** Defaults to "ready" so existing callers keep their current behaviour. */
+  status?: TableStatus;
+  error?: string | null;
+  isFiltered?: boolean;
   onSelect: (tx: Transaction) => void;
 }
 
@@ -79,7 +84,13 @@ const RecentTxRow = memo(function RecentTxRow({ tx, onSelect }: RecentTxRowProps
   );
 }, hasSameRenderedData);
 
-export function RecentTxTable({ txs, onSelect }: RecentTxTableProps) {
+export function RecentTxTable({
+  txs,
+  onSelect,
+  status = "ready",
+  error = null,
+  isFiltered = false,
+}: RecentTxTableProps) {
   return (
     <Panel title="RECENT TRANSACTIONS">
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -104,9 +115,16 @@ export function RecentTxTable({ txs, onSelect }: RecentTxTableProps) {
           </tr>
         </thead>
         <tbody>
-          {txs.map((tx) => (
-            <RecentTxRow key={tx.id} tx={tx} onSelect={onSelect} />
-          ))}
+          {status === "ready" &&
+            txs.map((tx) => <RecentTxRow key={tx.id} tx={tx} onSelect={onSelect} />)}
+          {(status !== "ready" || txs.length === 0) && (
+            <TableStateRow
+              status={status}
+              colSpan={HEADERS.length}
+              error={error}
+              isFiltered={isFiltered}
+            />
+          )}
         </tbody>
       </table>
       <SorobanTip>
