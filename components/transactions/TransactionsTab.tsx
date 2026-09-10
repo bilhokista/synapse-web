@@ -8,6 +8,7 @@ import { SorobanTip } from "@/components/ui/SorobanTip";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { AMBER, BG3, BORDER, DIM } from "@/lib/constants";
 import { MOCK_TXS } from "@/lib/mock-data";
+import { matchesTransactionFilter } from "@/lib/utils";
 import type { Transaction } from "@/lib/types";
 
 export function TransactionsTab() {
@@ -15,13 +16,7 @@ export function TransactionsTab() {
   const [selected, setSelected] = useState<Transaction | null>(null);
   const [cb, setCb] = useState({ tx_id: "", callback_url: "", secret: "" });
 
-  const filtered = MOCK_TXS.filter(
-    (t) =>
-      t.id.includes(filter) ||
-      t.status.includes(filter.toUpperCase()) ||
-      t.asset.includes(filter.toUpperCase()) ||
-      t.memo.includes(filter)
-  );
+  const filtered = MOCK_TXS.filter((t) => matchesTransactionFilter(t, filter));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }} className="animate-fade-in">
