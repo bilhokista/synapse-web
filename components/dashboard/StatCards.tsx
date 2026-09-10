@@ -13,6 +13,8 @@ export function StatCards({ txs }: StatCardsProps) {
     counts[t.status]++;
   });
 
+  // Ordered to match STAGES in Pipeline.tsx — PENDING, PROCESSING, COMPLETED,
+  // FAILED — so the two views on this page read left-to-right the same way.
   const cards = [
     { label: "TOTAL TXS", value: txs.length, sub: "mock data", color: NEUTRAL },
     {
@@ -20,6 +22,12 @@ export function StatCards({ txs }: StatCardsProps) {
       value: counts.PENDING,
       sub: "awaiting pickup",
       color: STATUS_META.PENDING.color,
+    },
+    {
+      label: "PROCESSING",
+      value: counts.PROCESSING,
+      sub: "in flight",
+      color: STATUS_META.PROCESSING.color,
     },
     {
       label: "COMPLETED",
