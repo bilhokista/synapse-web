@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { DashboardTab } from "./dashboard/DashboardTab";
 import { TransactionsTab } from "./transactions/TransactionsTab";
 import { AdminTab } from "./admin/AdminTab";
@@ -11,8 +12,49 @@ import { useSorobanStatus } from "@/lib/soroban/useSorobanStatus";
 type Tab = "dashboard" | "transactions" | "admin" | "docs";
 const TABS: Tab[] = ["dashboard", "transactions", "admin", "docs"];
 
+function isTab(value: string | null): value is Tab {
+  return TABS.includes(value as Tab);
+}
+
 export function Shell() {
-  const [tab, setTab] = useState<Tab>("dashboard");
+  // useSearchParams() opts the route into dynamic rendering; without a boundary
+  // Next.js fails the build for a statically rendered page that calls it.
+  return (
+    <Suspense fallback={null}>
+      <ShellContent />
+    </Suspense>
+  );
+}
+
+function ShellContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Restored from the URL so a refresh, a bookmark, or a shared link all land
+  // on the same tab. An unknown or missing value falls back to the dashboard
+  // rather than rendering nothing.
+  const [tab, setTabState] = useState<Tab>(() => {
+    const fromUrl = searchParams.get("tab");
+    return isTab(fromUrl) ? fromUrl : "dashboard";
+  });
+
+  const setTab = useCallback(
+    (next: Tab) => {
+      setTabState(next);
+      const params = new URLSearchParams(searchParams.toString());
+      // The dashboard is the default, so it stays out of the URL — a clean
+      // address for the default view rather than ?tab=dashboard.
+      if (next === "dashboard") params.delete("tab");
+      else params.set("tab", next);
+      const q = params.toString();
+      // replace, not push: switching tabs is not a navigation the user expects
+      // to walk back through one at a time.
+      router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
   const [connected, setConnected] = useState(false);
   const { status: rpcStatus, lastEventAge, health: rpcHealth } = useSorobanStatus();
 
