@@ -7,7 +7,23 @@ import { CopyButton } from "@/components/ui/CopyButton";
 import { STATUS_META, AMBER, BG1, BORDER, DIM } from "@/lib/constants";
 import { formatAmount } from "@/lib/utils";
 import { STATUS_META, AMBER, BG1, BG2, BORDER, DIM } from "@/lib/constants";
-import type { Transaction } from "@/lib/types";
+import type { Transaction, TxStatus } from "@/lib/types";
+
+// Documented lifecycle: PENDING -> PROCESSING -> COMPLETED, or -> FAILED.
+// COMPLETED and FAILED are terminal, so nothing is actionable from either.
+//
+// Kept local to this component rather than added to lib/utils.ts to avoid
+// colliding with other open work on that file.
+const ALLOWED_FROM: Record<"start" | "complete" | "fail", TxStatus[]> = {
+  start: ["PENDING"],
+  complete: ["PROCESSING"],
+  fail: ["PROCESSING"],
+};
+
+function whyDisabled(action: keyof typeof ALLOWED_FROM, status: TxStatus): string | undefined {
+  if (ALLOWED_FROM[action].includes(status)) return undefined;
+  return `unavailable while status is ${status}`;
+}
 
 interface TxDetailModalProps {
   tx: Transaction;
@@ -230,16 +246,22 @@ export function TxDetailModal({ tx, onClose }: TxDetailModalProps) {
             <ActionButton
               label="START PROCESSING"
               color={STATUS_META.PROCESSING.color}
+              disabled={!ALLOWED_FROM.start.includes(tx.status)}
+              title={whyDisabled("start", tx.status)}
               onClick={() => alert(`⬡ SOROBAN: start_processing(tx_id: "${tx.id}")`)}
             />
             <ActionButton
               label="COMPLETE"
               color={STATUS_META.COMPLETED.color}
+              disabled={!ALLOWED_FROM.complete.includes(tx.status)}
+              title={whyDisabled("complete", tx.status)}
               onClick={() => alert(`⬡ SOROBAN: complete_transaction(tx_id: "${tx.id}")`)}
             />
             <ActionButton
               label="FAIL"
               color={STATUS_META.FAILED.color}
+              disabled={!ALLOWED_FROM.fail.includes(tx.status)}
+              title={whyDisabled("fail", tx.status)}
               onClick={() => setShowFailPrompt(true)}
             />
             <ActionButton
