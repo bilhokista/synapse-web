@@ -4,11 +4,18 @@ import { Badge } from "@/components/ui/Badge";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { AMBER, BG3, BORDER, DIM } from "@/lib/constants";
 import { shortId, elapsed, formatAmount } from "@/lib/utils";
-import type { Transaction } from "@/lib/types";
+import { TableStateRow } from "@/components/ui/TableStateRow";
+import type { TableStatus, Transaction } from "@/lib/types";
 
 interface TxTableProps {
   txs: Transaction[];
   onSelect: (tx: Transaction) => void;
+  /** Defaults to "ready" so existing callers keep their current behaviour. */
+  status?: TableStatus;
+  error?: string | null;
+  /** Defaults to true, preserving today's "no match" wording for callers that
+   *  always pass a filtered array. */
+  isFiltered?: boolean;
 }
 
 const HEADERS = ["TX ID", "ASSET", "AMOUNT", "FROM", "TO", "STATUS", "RETRIES", "AGE"];
@@ -95,7 +102,14 @@ const TxRow = memo(function TxRow({ tx, onSelect }: TxRowProps) {
   );
 }, hasSameRenderedData);
 
-export function TxTable({ txs, onSelect }: TxTableProps) {
+export function TxTable({
+  txs,
+  onSelect,
+  status = "ready",
+  error = null,
+  isFiltered = true,
+}: TxTableProps) {
+  const showState = status !== "ready" || txs.length === 0;
   return (
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
@@ -121,24 +135,15 @@ export function TxTable({ txs, onSelect }: TxTableProps) {
           </tr>
         </thead>
         <tbody>
-          {txs.map((tx) => (
-            <TxRow key={tx.id} tx={tx} onSelect={onSelect} />
-          ))}
-          {txs.length === 0 && (
-            <tr>
-              <td
-                colSpan={8}
-                style={{
-                  padding: 24,
-                  textAlign: "center",
-                  color: DIM,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 11,
-                }}
-              >
-                no transactions match filter
-              </td>
-            </tr>
+          {status === "ready" &&
+            txs.map((tx) => <TxRow key={tx.id} tx={tx} onSelect={onSelect} />)}
+          {showState && (
+            <TableStateRow
+              status={status}
+              colSpan={HEADERS.length}
+              error={error}
+              isFiltered={isFiltered}
+            />
           )}
         </tbody>
       </table>
