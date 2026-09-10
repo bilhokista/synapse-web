@@ -35,3 +35,11 @@ export interface CallbackPayload {
   callback_url: string;
   secret: string;
 }
+
+/**
+ * Loading state of a table's data source.
+ *
+ * Separate from "the array is empty": an empty array means something different
+ * while a request is in flight, after it failed, and after it succeeded.
+ */
+export type TableStatus = "loading" | "ready" | "error";
