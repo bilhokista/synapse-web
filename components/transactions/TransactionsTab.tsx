@@ -15,6 +15,26 @@ export function TransactionsTab() {
   const [selected, setSelected] = useState<Transaction | null>(null);
   const [cb, setCb] = useState({ tx_id: "", callback_url: "", secret: "" });
 
+  /**
+   * Fires the callback registration and drops the secret from state.
+   *
+   * The HMAC secret is the one value here that must not outlive the request
+   * that uses it. tx_id and callback_url are deliberately kept, so a user
+   * registering several callbacks does not have to retype them.
+   *
+   * The secret must also never reach a log line, an error report or a query
+   * cache — worth keeping in mind as the real submission path lands in #11
+   * and #14, and as Sentry (#19) and React Query (#13) are introduced. Note
+   * the "***" placeholder below rather than the value itself.
+   */
+  const handleRegisterCallback = () => {
+    alert(
+      `⬡ SOROBAN: register_callback(payload: CallbackPayload { tx_id: "${cb.tx_id}", callback_url: "${cb.callback_url}", secret: "***" })`,
+    );
+
+    setCb((p) => ({ ...p, secret: "" }));
+  };
+
   const filtered = MOCK_TXS.filter(
     (t) =>
       t.id.includes(filter) ||
@@ -106,11 +126,7 @@ export function TransactionsTab() {
         <ActionButton
           label="REGISTER CALLBACK →"
           color={AMBER}
-          onClick={() =>
-            alert(
-              `⬡ SOROBAN: register_callback(payload: CallbackPayload { tx_id: "${cb.tx_id}", callback_url: "${cb.callback_url}", secret: "***" })`
-            )
-          }
+          onClick={handleRegisterCallback}
         />
         <SorobanTip>
           register_callback(payload: CallbackPayload) → signed by relay_signer keypair via
